@@ -170,10 +170,32 @@ void i2cSetup() {
 }
 
 
+//====================
+//Data call for 2 Gyro (interpolated movement)
+//====================
+
+// orientation/motion vars
+Quaternion q;           // [w, x, y, z]         quaternion container
+Quaternion q2;           // [w, x, y, z]         quaternion container
+VectorInt16 aa;         // [x, y, z]            accel sensor measurements
+VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
+VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
+VectorFloat gravity;    // [x, y, z]            gravity vector
+float euler[3];         // [psi, theta, phi]    Euler angle container
+float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+
+  // NOTE: 8MHz or slower host processors, like the Teensy @ 3.3v or Ardunio
+  // Pro Mini running at 3.3v, cannot handle this baud rate reliably due to
+  // the baud timing being too misaligned with processor ticks. You must use
+  // 38400 or slower in these cases, or use some kind of external separate
+  // crystal solution for the UART timer.
+
 
 // ================================================================
 // ===               INTERRUPT DETECTION ROUTINE                ===
 // ================================================================
+// gonna need to edit this for the interrupt for nyquist sampling of the data points (resistance values)
+
 // indicates whether MPU interrupt pin has gone high
 volatile bool mpuInterrupt[2] = {false, false};     
 
@@ -190,31 +212,16 @@ uint16_t packetSize[2];    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount[2];     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[2][64]; // FIFO storage buffer
 
+// ================================================================
+// ===                Stretch Sensor CODE                       ===
+// ================================================================
 
-// orientation/motion vars
-Quaternion q;           // [w, x, y, z]         quaternion container
-Quaternion q2;           // [w, x, y, z]         quaternion container
-VectorInt16 aa;         // [x, y, z]            accel sensor measurements
-VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
-VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
-VectorFloat gravity;    // [x, y, z]            gravity vector
-float euler[3];         // [psi, theta, phi]    Euler angle container
-float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+// ================================================================
+// ===                          GYRO CODE                       ===
+// ================================================================
 
 
-
-  // NOTE: 8MHz or slower host processors, like the Teensy @ 3.3v or Ardunio
-  // Pro Mini running at 3.3v, cannot handle this baud rate reliably due to
-  // the baud timing being too misaligned with processor ticks. You must use
-  // 38400 or slower in these cases, or use some kind of external separate
-  // crystal solution for the UART timer.
-
-
-
-  //=========================
-
-  //========================
-void MPU6050Connect() {
+void MPU6050Connect() { //calls the connection to the gyroscope from arduino
 
 for (int i = 0; i < 2; i++) {
 
@@ -276,7 +283,6 @@ for (int i = 0; i < 2; i++) {
     mpus[i].resetFIFO(); // Clear fifo buffer    
     mpuInterrupt[i] = false; // wait for next interrupt
 
-
   /* configure LED for output
   pinMode(LED_PIN, OUTPUT);
   // Configure button for input
@@ -287,12 +293,7 @@ for (int i = 0; i < 2; i++) {
 
 }
 
-
-// ================================================================
-// ===                    MAIN PROGRAM LOOP                     ===
-// ================================================================
-
-void GetDMP() { 
+void GetDMP() { //main call to the gyro (includes the interrupt)
 
   for (int i = 0; i < 2; i++) { 
     mpuInterrupt[i] = false;
@@ -320,8 +321,9 @@ void GetDMP() {
 
 
 //====================================================//
-//----------------- QUATERNION OUTPUTS---------------
+//----------------- QUATERNION CALCULATOR --------------
 //===================================================//
+
 void MPUMath() {
 
 
@@ -506,14 +508,20 @@ void MPUMath() {
     if (currentMillis - lastHearbeadLedBlinkTime >= HEARBEAT_LED_BLINK_TIME) {
       lastHearbeadLedBlinkTime = currentMillis;
       blinkState = !blinkState;
-      digitalWrite(LED_PIN, blinkState);
-      
+      digitalWrite(LED_PIN, blinkState);     
     }
-
 }
 
- 
-
+/**
+ * =============================================================
+ * ===                  Main Arduino Loop                         ===
+ * =============================================================
+ *
+ * @author Mike Muscato
+ * @date   2017-01-30
+ *
+ * @return {void}
+ */
 
 void setup() {
   Serial.begin(115200);
@@ -531,17 +539,6 @@ void setup() {
   loop();
 }
 
-
-/**
- * =============================================================
- * ===                  Arduino Loop                         ===
- * =============================================================
- *
- * @author Mike Muscato
- * @date   2017-01-30
- *
- * @return {void}
- */
 void loop() {
  unsigned long currentMillis = millis();   // Capture the latest value of millis()
 
