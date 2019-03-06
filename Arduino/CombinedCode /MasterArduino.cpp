@@ -523,6 +523,23 @@ void MPUMath() {
  * @return {void}
  */
 
+float readAngle(float[] resistances, const char* const inputs[]){
+    #thumb to pinky, A0 -> A3
+    short maxInputs = 4;
+    float avgValue = 0;
+    float avgAngle = 0;
+    for(int i = 0; i < maxInputs; i++){
+        resistances[i] = analogRead[i];
+    }
+
+    for(i = 0; i < maxInputs; i++){
+        avgValue += resistances[i];
+    }
+    avgValue /= 4;
+    /* Now we need to calculation to convert to angle */
+    return avgAngle;    
+}
+
 void setup() {
   Serial.begin(115200);
   while (!Serial);  // Wait for the connection to be established?
@@ -544,7 +561,11 @@ void loop() {
 
   if (mpuInterrupt[0] && mpuInterrupt[1]) { // Wait for MPU interrupt or extra packet(s) available on both MPUs
     GetDMP();
+    angle = readAngle(); 
+    
   }
+
+  
 
   // Uncomment for setting and adjusting the hardware start position. 
   // (e.g. Setting rotation and leveling the pan/tilt servo arms at initial 90-degree position)
