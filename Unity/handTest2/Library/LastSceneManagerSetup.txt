@@ -1,0 +1,4 @@
+sceneSetups:
+- path: Assets/HandPhysics/Example/ExampleScene.unity
+  isLoaded: 1
+  isActive: 1
