@@ -1,6 +1,15 @@
+<<<<<<< HEAD
 <?xml version="1.0" encoding="UTF-8"?>
 <Timeline
    version = "3.0">
    <TimelineItems>
    </TimelineItems>
 </Timeline>
+=======
+<?xml version="1.0" encoding="UTF-8"?>
+<Timeline
+   version = "3.0">
+   <TimelineItems>
+   </TimelineItems>
+</Timeline>
+>>>>>>> 6f0c51ba9ad63f5481a6417ceaf3600e60c2baed
